@@ -114,6 +114,7 @@ extension CodexService {
             selectedModelId = RuntimeSelectionDefaults.modelId
             selectedReasoningEffort = RuntimeSelectionDefaults.reasoningEffort
         }
+        hasPersistedSelectedModelId = true
         normalizeRuntimeSelectionsAfterModelsUpdate()
     }
 
@@ -391,7 +392,7 @@ extension CodexService {
             }
         }
 
-        var finalAttemptParams = baseParams
+        let finalAttemptParams = baseParams
         debugRuntimeLog("\(method) fallback using minimal payload")
         return try await sendRequestWithApprovalPolicyFallback(
             method: method,
@@ -485,6 +486,7 @@ private extension CodexService {
 
         let resolvedModel = selectedModelOption(from: availableModels) ?? fallbackModel(from: availableModels)
         selectedModelId = resolvedModel?.id
+        hasPersistedSelectedModelId = resolvedModel != nil
 
         if let resolvedModel {
             let supported = Set(resolvedModel.supportedReasoningEfforts.map { $0.reasoningEffort })
@@ -574,7 +576,7 @@ private extension CodexService {
     }
 
     func persistRuntimeSelections() {
-        if let selectedModelId, !selectedModelId.isEmpty {
+        if let selectedModelId, !selectedModelId.isEmpty, hasPersistedSelectedModelId {
             defaults.set(selectedModelId, forKey: Self.selectedModelIdDefaultsKey)
         } else {
             defaults.removeObject(forKey: Self.selectedModelIdDefaultsKey)
